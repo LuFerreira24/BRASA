@@ -1,6 +1,11 @@
 package br.com.brasa.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import br.com.brasa.validation.CpfCnpj;
+import br.com.brasa.validation.Documentos;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,18 +20,28 @@ public class Cliente {
     @Column(name = "id_cliente")
     private Long id;
 
+    @NotBlank(message = "Nome e obrigatorio")
+    @Size(max = 150)
     @Column(name = "nome", nullable = false, length = 150)
     private String nome;
 
+    // Gravado somente com digitos (11 para CPF, 14 para CNPJ) para que a restricao UNIQUE
+    // nao seja burlada por mascaras diferentes do mesmo documento.
+    @NotBlank(message = "CPF/CNPJ e obrigatorio")
+    @CpfCnpj
     @Column(name = "cpf_cnpj", nullable = false, unique = true, length = 18)
     private String cpfCnpj;
 
+    @Size(max = 20)
     @Column(name = "telefone", length = 20)
     private String telefone;
 
+    @Email(message = "E-mail invalido")
+    @Size(max = 150)
     @Column(name = "email", length = 150)
     private String email;
 
+    @Size(max = 255)
     @Column(name = "endereco", length = 255)
     private String endereco;
 
@@ -41,6 +56,23 @@ public class Cliente {
 
     @OneToOne(mappedBy = "cliente")
     private Usuario usuario;
+
+    public Cliente() {
+    }
+
+    public Cliente(String nome, String cpfCnpj) {
+        setNome(nome);
+        setCpfCnpj(cpfCnpj);
+    }
+
+    /** Inativacao logica (soft delete): o registro continua no banco e ligado as OS antigas. */
+    public void inativar() {
+        this.ativo = false;
+    }
+
+    public boolean isAtivo() {
+        return Boolean.TRUE.equals(ativo);
+    }
 
     @PrePersist
     protected void prePersist() {
@@ -70,7 +102,7 @@ public class Cliente {
     }
 
     public void setCpfCnpj(String cpfCnpj) {
-        this.cpfCnpj = cpfCnpj;
+        this.cpfCnpj = Documentos.somenteDigitos(cpfCnpj);
     }
 
     public String getTelefone() {

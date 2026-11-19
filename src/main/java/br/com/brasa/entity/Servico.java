@@ -1,6 +1,12 @@
 package br.com.brasa.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+import br.com.brasa.exception.RegraNegocioException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,12 +20,17 @@ public class Servico {
     @Column(name = "id_servico")
     private Long id;
 
+    @NotBlank(message = "Nome e obrigatorio")
+    @Size(max = 150)
     @Column(name = "nome", nullable = false, length = 150)
     private String nome;
 
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
+    @NotNull
+    @PositiveOrZero
+    @Digits(integer = 10, fraction = 2)
     @Column(name = "preco_atual", nullable = false, precision = 12, scale = 2)
     private BigDecimal precoAtual;
 
@@ -28,6 +39,22 @@ public class Servico {
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDateTime dataCadastro;
+
+    public Servico() {
+    }
+
+    public Servico(String nome, BigDecimal precoAtual) {
+        this.nome = nome;
+        setPrecoAtual(precoAtual);
+    }
+
+    public void inativar() {
+        this.ativo = false;
+    }
+
+    public boolean isAtivo() {
+        return Boolean.TRUE.equals(ativo);
+    }
 
     @PrePersist
     protected void prePersist() {
@@ -65,6 +92,9 @@ public class Servico {
     }
 
     public void setPrecoAtual(BigDecimal precoAtual) {
+        if (precoAtual != null && precoAtual.signum() < 0) {
+            throw new RegraNegocioException("Preco do servico nao pode ser negativo");
+        }
         this.precoAtual = precoAtual;
     }
 

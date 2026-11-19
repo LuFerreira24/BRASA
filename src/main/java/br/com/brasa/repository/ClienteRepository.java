@@ -1,0 +1,16 @@
+package br.com.brasa.repository;
+
+import br.com.brasa.entity.Cliente;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+
+    List<Cliente> findByAtivoTrueOrderByNomeAsc();
+
+    Optional<Cliente> findByCpfCnpj(String cpfCnpj);
+
+    boolean existsByCpfCnpj(String cpfCnpj);
+}

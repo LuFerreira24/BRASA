@@ -2,6 +2,7 @@ package br.com.brasa.entity;
 
 import br.com.brasa.entity.enums.TipoMovimentacao;
 import jakarta.persistence.*;
+import br.com.brasa.exception.RegraNegocioException;
 
 import java.time.LocalDateTime;
 
@@ -45,6 +46,23 @@ public class MovimentacaoEstoque {
         if (dataHora == null) {
             dataHora = LocalDateTime.now();
         }
+    }
+
+    protected MovimentacaoEstoque() {
+    }
+
+    public MovimentacaoEstoque(Peca peca, OrdemServico ordemServico, Usuario usuario,
+                               TipoMovimentacao tipo, int quantidade, String observacao) {
+        if (quantidade <= 0) {
+            throw new RegraNegocioException("Quantidade da movimentacao deve ser maior que zero");
+        }
+        this.peca = peca;
+        this.ordemServico = ordemServico;
+        this.usuario = usuario;
+        this.tipo = tipo;
+        this.quantidade = quantidade;
+        this.observacao = observacao;
+        this.dataHora = LocalDateTime.now();
     }
 
     public Long getId() {

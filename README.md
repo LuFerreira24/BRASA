@@ -20,3 +20,16 @@ docker compose up -d --build
 docker compose up -d db
 ./mvnw spring-boot:run
 ```
+
+## Testes
+```bash
+./mvnw test
+```
+Requer o Docker ligado: os testes de persistência sobem um PostgreSQL 17 em container (Testcontainers) criado pelo `BRASA_banco_de_dados.sql`.
+
+| Experimento (seção 17.2) | Testes |
+|---|---|
+| 1 - Mapeamento JPA | `BrasaApplicationTests` (contexto sobe com `ddl-auto=validate`) |
+| 2 - Validações no domínio | `ValidacoesDominioTest`, `DocumentosTest` |
+| 3 - Persistência e integridade | `PersistenciaTest` (`@DataJpaTest`) |
+| 4 - Regras da OS | `OrdemServicoTest`, `PecaTest`, `OrdemServicoServiceTest` (rollback) |

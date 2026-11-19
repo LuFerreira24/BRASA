@@ -1,6 +1,10 @@
 package br.com.brasa.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import java.util.Locale;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -20,12 +24,18 @@ public class Usuario {
     @JoinColumn(name = "id_cliente", unique = true)
     private Cliente cliente;
 
+    @NotBlank(message = "Nome e obrigatorio")
+    @Size(max = 150)
     @Column(name = "nome", nullable = false, length = 150)
     private String nome;
 
+    @NotBlank(message = "E-mail e obrigatorio")
+    @Email(message = "E-mail invalido")
+    @Size(max = 150)
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
+    @NotBlank
     @Column(name = "senha_hash", nullable = false, length = 255)
     private String senhaHash;
 
@@ -46,6 +56,19 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "id_perfil")
     )
     private Set<Perfil> perfis = new HashSet<>();
+
+    public Usuario() {
+    }
+
+    public Usuario(String nome, String email, String senhaHash) {
+        this.nome = nome;
+        setEmail(email);
+        this.senhaHash = senhaHash;
+    }
+
+    public void inativar() {
+        this.ativo = false;
+    }
 
     @PrePersist
     protected void prePersist() {
@@ -83,7 +106,7 @@ public class Usuario {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
     public String getSenhaHash() {

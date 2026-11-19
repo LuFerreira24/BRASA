@@ -47,6 +47,21 @@ public class HistoricoOs {
         }
     }
 
+    protected HistoricoOs() {
+    }
+
+    public HistoricoOs(OrdemServico ordemServico, Usuario usuario, String tipoAlteracao,
+                       String campoAlterado, String valorAnterior, String valorNovo, String descricao) {
+        this.ordemServico = ordemServico;
+        this.usuario = usuario;
+        this.tipoAlteracao = tipoAlteracao;
+        this.campoAlterado = campoAlterado;
+        this.valorAnterior = valorAnterior;
+        this.valorNovo = valorNovo;
+        this.descricao = descricao;
+        this.dataHora = LocalDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

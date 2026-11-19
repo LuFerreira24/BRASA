@@ -1,6 +1,12 @@
 package br.com.brasa.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+import br.com.brasa.exception.RegraNegocioException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,21 +20,32 @@ public class Peca {
     @Column(name = "id_peca")
     private Long id;
 
+    @NotBlank(message = "Codigo e obrigatorio")
+    @Size(max = 50)
     @Column(name = "codigo", nullable = false, unique = true, length = 50)
     private String codigo;
 
+    @NotBlank(message = "Nome e obrigatorio")
+    @Size(max = 150)
     @Column(name = "nome", nullable = false, length = 150)
     private String nome;
 
+    @Size(max = 100)
     @Column(name = "marca", length = 100)
     private String marca;
 
+    @PositiveOrZero
+    @Digits(integer = 10, fraction = 2)
     @Column(name = "preco_custo", precision = 12, scale = 2)
     private BigDecimal precoCusto;
 
+    @PositiveOrZero
+    @Digits(integer = 10, fraction = 2)
     @Column(name = "preco_venda", precision = 12, scale = 2)
     private BigDecimal precoVenda;
 
+    @NotNull
+    @PositiveOrZero
     @Column(name = "quantidade_estoque", nullable = false)
     private Integer quantidadeEstoque = 0;
 
@@ -37,6 +54,54 @@ public class Peca {
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDateTime dataCadastro;
+
+    public Peca() {
+    }
+
+    public Peca(String codigo, String nome, BigDecimal precoVenda, int quantidadeEstoque) {
+        this.codigo = codigo;
+        this.nome = nome;
+        setPrecoVenda(precoVenda);
+        setQuantidadeEstoque(quantidadeEstoque);
+    }
+
+    public boolean temEstoque(int quantidade) {
+        return quantidadeEstoque != null && quantidadeEstoque >= quantidade;
+    }
+
+    /** Baixa do estoque (RF-014). Lanca excecao se a quantidade disponivel for insuficiente. */
+    public void baixarEstoque(int quantidade) {
+        if (quantidade <= 0) {
+            throw new RegraNegocioException("Quantidade a baixar deve ser maior que zero");
+        }
+        if (!temEstoque(quantidade)) {
+            throw new RegraNegocioException("Estoque insuficiente para a peca " + codigo
+                    + ": disponivel " + quantidadeEstoque + ", solicitado " + quantidade);
+        }
+        quantidadeEstoque -= quantidade;
+    }
+
+    /** Entrada ou devolucao ao estoque. */
+    public void reporEstoque(int quantidade) {
+        if (quantidade <= 0) {
+            throw new RegraNegocioException("Quantidade a repor deve ser maior que zero");
+        }
+        quantidadeEstoque += quantidade;
+    }
+
+    public void inativar() {
+        this.ativo = false;
+    }
+
+    public boolean isAtivo() {
+        return Boolean.TRUE.equals(ativo);
+    }
+
+    private static void validarPreco(BigDecimal preco, String tipo) {
+        if (preco != null && preco.signum() < 0) {
+            throw new RegraNegocioException("Preco de " + tipo + " nao pode ser negativo");
+        }
+    }
 
     @PrePersist
     protected void prePersist() {
@@ -82,6 +147,7 @@ public class Peca {
     }
 
     public void setPrecoCusto(BigDecimal precoCusto) {
+        validarPreco(precoCusto, "custo");
         this.precoCusto = precoCusto;
     }
 
@@ -90,6 +156,7 @@ public class Peca {
     }
 
     public void setPrecoVenda(BigDecimal precoVenda) {
+        validarPreco(precoVenda, "venda");
         this.precoVenda = precoVenda;
     }
 
@@ -98,6 +165,9 @@ public class Peca {
     }
 
     public void setQuantidadeEstoque(Integer quantidadeEstoque) {
+        if (quantidadeEstoque == null || quantidadeEstoque < 0) {
+            throw new RegraNegocioException("Quantidade em estoque nao pode ser negativa");
+        }
         this.quantidadeEstoque = quantidadeEstoque;
     }
 
